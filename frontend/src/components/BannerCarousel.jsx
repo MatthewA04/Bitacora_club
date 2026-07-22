@@ -1,5 +1,6 @@
 import React from 'react';
 
+
 // Simulamos los datos que vendrán de la base de datos (MySQL -> Node.js -> React)
 const mockBanners = [
   {

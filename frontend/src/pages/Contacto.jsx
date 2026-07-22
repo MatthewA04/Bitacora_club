@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from "../services/api";
 
 export default function Contacto() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export default function Contacto() {
     setMensaje(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/cotizaciones', {
+      const response = await fetch(`${API_BASE_URL}/cotizaciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -46,7 +47,7 @@ export default function Contacto() {
       } else {
         setMensaje({ tipo: 'danger', texto: data.error || 'Ocurrió un error al enviar el mensaje.' });
       }
-    } catch (error) {
+    } catch (error) {s
       console.error('Error al enviar formulario:', error);
       setMensaje({ tipo: 'danger', texto: 'No se pudo conectar con el servidor. Intenta de nuevo.' });
     } finally {

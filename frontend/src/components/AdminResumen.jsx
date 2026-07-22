@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL} from "../services/api";
 
 export default function AdminResumen({ cambiarVista }) {
   const [metricas, setMetricas] = useState({
@@ -16,7 +17,7 @@ export default function AdminResumen({ cambiarVista }) {
 
   const obtenerMetricas = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/resumen/metricas');
+        const response = await fetch(`${API_BASE_URL}/resumen/metricas`);
       if (response.ok) {
         const data = await response.json();
         setMetricas(data);

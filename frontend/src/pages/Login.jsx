@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Pages.css";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../services/api";
 
 export default function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/login", {
+      const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import imagenBanner from "../assets/banner2.jpg";
+import { API_BASE_URL } from "../services/api";
 
 export default function Noticias() {
   const [noticias, setNoticias] = useState([]);
@@ -16,12 +17,17 @@ export default function Noticias() {
     obtenerTodasLasNoticias();
   }, []);
 
+  // 1. CORRECCIÓN: Validación de Array para evitar cierres inesperados
   const obtenerTodasLasNoticias = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/noticias');
+      const response = await fetch(`${API_BASE_URL}/noticias`);
       if (response.ok) {
         const data = await response.json();
-        setNoticias(data);
+        if (Array.isArray(data)) {
+          setNoticias(data);
+        } else {
+          setNoticias([]);
+        }
       }
     } catch (error) {
       console.error("Error al cargar noticias:", error);
@@ -63,6 +69,15 @@ export default function Noticias() {
   const indicePrimero = indiceUltimo - tarjetasPorPagina;
   const noticiasPagina = resultado.slice(indicePrimero, indiceUltimo);
   const totalPaginas = Math.ceil(resultado.length / tarjetasPorPagina);
+
+  // 4. CORRECCIÓN: Función para cambiar de página con Scroll suave al inicio
+  const cambiarPagina = (nuevaPagina) => {
+    setPaginaActual(nuevaPagina);
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  };
+
+  // Helper para URL limpia de imágenes (Soporta uploads locales y URLs externas)
+  const BASE_SERVER_URL = API_BASE_URL.replace('/api', '');
 
   return (
     <div>
@@ -163,7 +178,7 @@ export default function Noticias() {
               <p className="m-0 fs-5">No se encontraron noticias que coincidan con tu búsqueda.</p>
             </div>
           ) : (
-            /* Grilla de Noticias con tus clases existentes */
+            /* Grilla de Noticias */
             <div className="row g-4">
               {noticiasPagina.map((item) => (
                 <div className="col-md-6 col-lg-4" key={item.id}>
@@ -171,10 +186,13 @@ export default function Noticias() {
                     <div>
                       {/* Imagen de la noticia */}
                       <div className="position-relative overflow-hidden rounded-3 mb-2">
+                        {/* 3. CORRECCIÓN: Manejo inteligente de URLs locales vs remotas */}
                         <img
                           src={
                             item.imagen
-                              ? `http://localhost:5000${item.imagen}`
+                              ? item.imagen.startsWith('http') 
+                                ? item.imagen 
+                                : `${BASE_SERVER_URL}${item.imagen}`
                               : "https://via.placeholder.com/350x220?text=Bitacora+Club"
                           }
                           className="imagen-tarjeta-paquete w-100"
@@ -198,8 +216,16 @@ export default function Noticias() {
                             {item.titulo}
                           </h5>
 
+                          {/* 2. CORRECCIÓN: Control de longitud de caracteres estricto */}
                           <p className="text-muted small mb-4">
-                            {item.resumen || (item.contenido ? `${item.contenido.substring(0, 120)}...` : '')}
+                            {item.resumen
+                              ? item.resumen.length > 120 
+                                ? `${item.resumen.substring(0, 120)}...` 
+                                : item.resumen
+                              : item.contenido 
+                                ? `${item.contenido.substring(0, 120)}...` 
+                                : ''
+                            }
                           </p>
                         </div>
                       </div>
@@ -226,7 +252,7 @@ export default function Noticias() {
               <button
                 className="btn btn-outline-warning fw-bold px-4"
                 disabled={paginaActual === 1}
-                onClick={() => setPaginaActual((p) => p - 1)}
+                onClick={() => cambiarPagina(paginaActual - 1)}
               >
                 Anterior
               </button>
@@ -236,7 +262,7 @@ export default function Noticias() {
               <button
                 className="btn btn-outline-warning fw-bold px-4"
                 disabled={paginaActual === totalPaginas}
-                onClick={() => setPaginaActual((p) => p + 1)}
+                onClick={() => cambiarPagina(paginaActual + 1)}
               >
                 Siguiente
               </button>

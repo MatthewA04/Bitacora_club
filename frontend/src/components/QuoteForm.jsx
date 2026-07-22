@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Components.css";
+import { API_BASE_URL} from "../services/api";
 
 function QuoteForm() {
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ function QuoteForm() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/cotizaciones", {
+      const response = await fetch(`${API_BASE_URL}/cotizaciones`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from "../services/api";
 
 export default function AdminNoticias() {
   const [subVista, setSubVista] = useState('ver');
@@ -43,7 +44,7 @@ export default function AdminNoticias() {
   const obtenerNoticias = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/noticias');
+      const response = await fetch(`${API_BASE_URL}/noticias`);
       const data = await response.json();
       setNoticias(data);
     } catch (error) {
@@ -61,7 +62,7 @@ export default function AdminNoticias() {
       categoria: noticia.categoria || 'Destinos y Guías', 
       contenido: noticia.contenido 
     });
-    setEditVistaPrevia(noticia.imagen ? `http://localhost:5000${noticia.imagen}` : null);
+    setEditVistaPrevia(noticia.imagen ? `${API_BASE_URL.replace('/api', '')}${noticia.imagen}` : null);
     setEditImagenArchivo(null);
   };
 
@@ -76,7 +77,7 @@ export default function AdminNoticias() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/noticias/${noticiaEditando.id}`, {
+      const response = await fetch(`${API_BASE_URL}/noticias/${noticiaEditando.id}`, {
         method: 'PUT',
         body: dataToSend
       });
@@ -93,7 +94,7 @@ export default function AdminNoticias() {
   const eliminarNoticia = async (id) => {
     if (window.confirm("¿Seguro que deseas eliminar esta noticia?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/noticias/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/noticias/${id}`, { method: 'DELETE' });
         if (response.ok) obtenerNoticias();
       } catch (error) {
         console.error("Error al eliminar:", error);
@@ -138,7 +139,7 @@ export default function AdminNoticias() {
                 noticias.map((noticia) => (
                   <tr key={noticia.id}>
                     <td>
-                      <img src={noticia.imagen ? `http://localhost:5000${noticia.imagen}` : 'https://via.placeholder.com/60'} alt="" className="rounded" style={{ width: '60px', height: '40px', objectFit: 'cover' }} />
+                      <img src={noticia.imagen ? `${API_BASE_URL.replace('/api', '')}${noticia.imagen}` : 'https://via.placeholder.com/60'} alt="" className="rounded" style={{ width: '60px', height: '40px', objectFit: 'cover' }} />
                     </td>
                     <td className="fw-bold text-dark">{noticia.titulo}</td>
                     <td>
@@ -171,7 +172,7 @@ export default function AdminNoticias() {
           d.append('imagen', imagenArchivo);
           
           try {
-            const r = await fetch('http://localhost:5000/api/noticias', { method: 'POST', body: d });
+            const r = await fetch(`${API_BASE_URL}/noticias`, { method: 'POST', body: d });
             if (r.ok) { 
               alert("¡Noticia publicada con éxito!"); 
               setFormData({ titulo: '', categoria: 'Destinos y Guías', contenido: '' }); 

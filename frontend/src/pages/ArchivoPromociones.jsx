@@ -3,50 +3,76 @@ import "../components/Components.css";
 import { Link } from "react-router-dom";
 import imagenBanner from "../assets/banner1.jpg";
 import "./Pages.css";
+import { API_BASE_URL } from "../services/api";
 
 export default function ArchivoPromociones() {
   const [promociones, setPromociones] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [destinoFiltro, setDestinoFiltro] = useState("Todos");
-  const [orden, setOrden] = useState("defecto"); // defecto, bajo, alto, recomendados
+  const [orden, setOrden] = useState("defecto");
   const [paginaActual, setPaginaActual] = useState(1);
   const tarjetasPorPagina = 9;
 
+  // Servidor base derivado de tu API_BASE_URL
+  const SERVER_BASE_URL = API_BASE_URL.replace('/api', '');
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/promociones")
-      .then((res) => res.json())
-      .then((data) => setPromociones(data))
-      .catch((err) => console.error(err));
+    fetch(`${API_BASE_URL}/promociones`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Error en la respuesta de la red");
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPromociones(data);
+        } else {
+          setPromociones([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error al obtener promociones:", err);
+        setPromociones([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  // Extraer destinos únicos dinámicamente para el selector de filtros
+  // Extraer destinos únicos dinámicamente
   const destinosUnicos = [
     "Todos",
     ...new Set(
-      promociones.map((p) => p.destino?.toUpperCase()).filter(Boolean),
+      promociones
+        .map((p) => p.destino?.toUpperCase().trim())
+        .filter(Boolean)
     ),
   ];
 
   // Aplicar lógica de Filtrado y Ordenamiento
   let resultado = [...promociones];
 
- if (destinoFiltro !== "Todos") {
-  resultado = resultado.filter(
-    (p) => p.destino?.toUpperCase() === destinoFiltro.toUpperCase()
-  );
-}
+  if (destinoFiltro !== "Todos") {
+    resultado = resultado.filter(
+      (p) => p.destino?.toUpperCase().trim() === destinoFiltro.toUpperCase()
+    );
+  }
 
-  if (orden === "bajo")
-    resultado.sort((a, b) => parseFloat(a.precio) - parseFloat(b.precio));
-  if (orden === "alto")
-    resultado.sort((a, b) => parseFloat(b.precio) - parseFloat(a.precio));
-  if (orden === "recomendados")
-    resultado = resultado.filter((p) => p.es_recomendado === 1);
+  if (orden === "bajo") {
+    resultado.sort((a, b) => parseFloat(a.precio || 0) - parseFloat(b.precio || 0));
+  } else if (orden === "alto") {
+    resultado.sort((a, b) => parseFloat(b.precio || 0) - parseFloat(a.precio || 0));
+  } else if (orden === "recomendados") {
+    resultado = resultado.filter((p) => Number(p.es_recomendado) === 1);
+  }
 
-  // Lógica de Paginación Matemática
+  // Lógica de Paginación
   const indiceUltimo = paginaActual * tarjetasPorPagina;
   const indicePrimero = indiceUltimo - tarjetasPorPagina;
   const promocionesPagina = resultado.slice(indicePrimero, indiceUltimo);
   const totalPaginas = Math.ceil(resultado.length / tarjetasPorPagina);
+
+  const cambiarPagina = (nuevaPagina) => {
+    setPaginaActual(nuevaPagina);
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
 
   return (
     <div>
@@ -69,12 +95,12 @@ export default function ArchivoPromociones() {
       </div>
 
       {/* Cuerpo de la página */}
-      <div className=" fondo-claro min-vh-100 py-5">
+      <div className="fondo-claro min-vh-100 py-5">
         <div className="container">
-          {/* Panel de Controles Mejorado */}
+          {/* Panel de Controles */}
           <div className="card border-0 shadow-sm p-4 mb-4 bg-white rounded-3">
             <div className="row align-items-center g-3">
-              {/* Filtro por Destinos mediante Chips/Pills */}
+              {/* Filtro por Destinos */}
               <div className="col-lg-8">
                 <label className="form-label fw-bold text-muted small d-block mb-2 text-uppercase">
                   <i className="bi bi-geo-alt-fill text-warning me-1"></i>{" "}
@@ -112,7 +138,7 @@ export default function ArchivoPromociones() {
                 </div>
               </div>
 
-              {/* Dropdown de Ordenamiento Limpio */}
+              {/* Dropdown de Ordenamiento */}
               <div className="col-lg-4">
                 <label className="form-label fw-bold text-muted small d-block mb-2 text-uppercase">
                   Ordenar Por
@@ -135,58 +161,75 @@ export default function ArchivoPromociones() {
             </div>
           </div>
 
-          {/* Grilla de Promociones con Clases Personalizadas */}
-          <div className="row g-4">
-            {promocionesPagina.map((promo) => (
-              <div className="col-md-6 col-lg-4" key={promo.id}>
-                <div className="tarjeta-paquete p-3 h-100 d-flex flex-column justify-content-between">
-                  <div>
-                    <div className="position-relative overflow-hidden rounded-3 mb-2">
-                      <img
-                        src={
-                          promo.imagen
-                            ? `http://localhost:5000${promo.imagen}`
-                            : "https://via.placeholder.com/350x220?text=Bitacora+Club"
-                        }
-                        className="imagen-tarjeta-paquete w-100"
-                        alt={promo.titulo}
-                      />
-                    </div>
-                    <div className="card-body d-flex flex-column justify-content-between px-1 pt-2 pb-0">
-                      <div>
-                        <span className="text-warning text-uppercase fw-bold small d-block mb-1">
-                          <i className="bi bi-geo-alt-fill me-1"></i>
-                          {promo.destino || "Nacional"}
-                        </span>
+          {/* Estado de Carga / Sin Resultados / Grilla */}
+          {loading ? (
+            <div className="text-center my-5 py-5">
+              <div className="spinner-border text-warning" role="status">
+                <span className="visually-hidden">Cargando promociones...</span>
+              </div>
+            </div>
+          ) : resultado.length === 0 ? (
+            <div className="text-center text-muted py-5 my-5 bg-white rounded-3 shadow-sm p-4">
+              <p className="m-0 fs-5">No hay promociones disponibles para este filtro.</p>
+            </div>
+          ) : (
+            <div className="row g-4">
+              {promocionesPagina.map((promo) => (
+                <div className="col-md-6 col-lg-4" key={promo.id}>
+                  <div className="tarjeta-paquete p-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                      <div className="position-relative overflow-hidden rounded-3 mb-2">
+                        <img
+                          src={
+                            promo.imagen
+                              ? promo.imagen.startsWith("http")
+                                ? promo.imagen
+                                : `${SERVER_BASE_URL}${promo.imagen}`
+                              : "https://via.placeholder.com/350x220?text=Bitacora+Club"
+                          }
+                          className="imagen-tarjeta-paquete w-100"
+                          alt={promo.titulo || "Promoción"}
+                          style={{ height: "200px", objectFit: "cover" }}
+                        />
+                      </div>
+                      <div className="card-body d-flex flex-column justify-content-between px-1 pt-2 pb-0">
+                        <div>
+                          <span className="text-warning text-uppercase fw-bold small d-block mb-1">
+                            <i className="bi bi-geo-alt-fill me-1"></i>
+                            {promo.destino || "Nacional"}
+                          </span>
 
-                        <h5 className="titulo-tarjeta-paquete lh-sm mb-3">
-                          {promo.titulo}
-                        </h5>
+                          <h5 className="titulo-tarjeta-paquete lh-sm mb-3">
+                            {promo.titulo}
+                          </h5>
 
-                        <p className="text-muted small mb-4">
-                          {promo.resumen && promo.resumen.length > 105
-                            ? `${promo.resumen.substring(0, 250)}...`
-                            : promo.resumen}
-                        </p>
+                          <p className="text-muted small mb-4">
+                            {promo.resumen
+                              ? promo.resumen.length > 110
+                                ? `${promo.resumen.substring(0, 110)}...`
+                                : promo.resumen
+                              : ""}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
-                    <span className="fw-bold text-dark fs-5">
-                      S/ {parseFloat(promo.precio).toFixed(2)}
-                    </span>
-                    <Link
-                      to={`/paquete/${promo.id}`}
-                      className="btn btn-warning text-white fw-bold px-4 rounded-3"
-                    >
-                      VER PROMOCIÓN
-                    </Link>
+                    <div className="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                      <span className="fw-bold text-dark fs-5">
+                        S/ {parseFloat(promo.precio || 0).toFixed(2)}
+                      </span>
+                      <Link
+                        to={`/paquete/${promo.id}`}
+                        className="btn btn-warning text-white fw-bold px-4 rounded-3"
+                      >
+                        VER PROMOCIÓN
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Paginación */}
           {totalPaginas > 1 && (
@@ -194,7 +237,7 @@ export default function ArchivoPromociones() {
               <button
                 className="btn btn-outline-warning fw-bold px-4"
                 disabled={paginaActual === 1}
-                onClick={() => setPaginaActual((p) => p - 1)}
+                onClick={() => cambiarPagina(paginaActual - 1)}
               >
                 Anterior
               </button>
@@ -204,7 +247,7 @@ export default function ArchivoPromociones() {
               <button
                 className="btn btn-outline-warning fw-bold px-4"
                 disabled={paginaActual === totalPaginas}
-                onClick={() => setPaginaActual((p) => p + 1)}
+                onClick={() => cambiarPagina(paginaActual + 1)}
               >
                 Siguiente
               </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from "../services/api";
 
 export default function AdminContactos() {
   const [contactos, setContactos] = useState([]);
@@ -12,7 +13,7 @@ export default function AdminContactos() {
   const obtenerContactos = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/contactos');
+      const response = await fetch(`${API_BASE_URL}/contactos`);
       const data = await response.json();
       setContactos(data);
     } catch (error) {
@@ -24,7 +25,7 @@ export default function AdminContactos() {
 
   const cambiarEstado = async (id, nuevoEstado) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contactos/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/contactos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: nuevoEstado })
@@ -40,7 +41,7 @@ export default function AdminContactos() {
   const eliminarContacto = async (id) => {
     if (window.confirm("¿Seguro que deseas eliminar este mensaje de la base de datos?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/contactos/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/contactos/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

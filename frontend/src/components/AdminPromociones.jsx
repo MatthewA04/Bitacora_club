@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from "../services/api";
 
 export default function AdminPromociones() {
   const [subVista, setSubVista] = useState('ver');
@@ -45,10 +46,11 @@ export default function AdminPromociones() {
     obtenerPromociones();
   }, []);
 
+  // 1. OBTENER PROMOCIONES (Corregido comillas a backticks)
   const obtenerPromociones = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/promociones');
+      const response = await fetch(`${API_BASE_URL}/promociones`);
       if (!response.ok) throw new Error(`Error en el servidor: Status ${response.status}`);
       const data = await response.json();
       if (Array.isArray(data)) {
@@ -79,7 +81,7 @@ export default function AdminPromociones() {
       precio: promo.precio,
       es_recomendado: Boolean(promo.es_recomendado)
     });
-    setEditVistaPrevia(promo.imagen ? `http://localhost:5000${promo.imagen}` : null);
+    setEditVistaPrevia(promo.imagen ? `${API_BASE_URL.replace('/api', '')}${promo.imagen}` : null);
     setEditImagenArchivo(null);
   };
 
@@ -102,7 +104,7 @@ export default function AdminPromociones() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/promociones/${promoEditando.id}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/${promoEditando.id}`, {
         method: 'PUT',
         body: dataToSend
       });
@@ -133,7 +135,7 @@ export default function AdminPromociones() {
     dataToSend.append('es_recomendado', !promo.es_recomendado);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/promociones/${promo.id}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/${promo.id}`, {
         method: 'PUT',
         body: dataToSend
       });
@@ -145,10 +147,11 @@ export default function AdminPromociones() {
     }
   };
 
+  // ELIMINAR (Corregido /api duplicado)
   const eliminarPromocion = async (id) => {
     if (window.confirm("¿Seguro que deseas eliminar esta promoción de forma permanente?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/promociones/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/promociones/${id}`, { method: 'DELETE' });
         if (response.ok) obtenerPromociones();
       } catch (error) {
         console.error("Error al eliminar:", error);
@@ -194,7 +197,12 @@ export default function AdminPromociones() {
                 promociones.map((promo) => (
                   <tr key={promo.id}>
                     <td>
-                      <img src={promo.imagen ? `http://localhost:5000${promo.imagen}` : 'https://via.placeholder.com/60'} alt="" className="rounded" style={{ width: '60px', height: '40px', objectFit: 'cover' }} />
+                      <img 
+                        src={promo.imagen ? `${API_BASE_URL.replace('/api', '')}${promo.imagen}` : 'https://via.placeholder.com/60'} 
+                        alt="" 
+                        className="rounded" 
+                        style={{ width: '60px', height: '40px', objectFit: 'cover' }} 
+                      />
                     </td>
                     <td className="fw-bold text-dark">{promo.titulo}</td>
                     <td className="fw-semibold text-uppercase text-primary">{promo.destino || "NO ASIGNADO"}</td>
@@ -222,7 +230,7 @@ export default function AdminPromociones() {
           </table>
         </div>
       ) : (
-        /* FORMULARIO DE CREACIÓN */
+        /* FORMULARIO DE CREACIÓN (Corregido /api duplicado y backticks) */
         <form onSubmit={async (e) => {
           e.preventDefault();
           if (!imagenArchivo) return alert("Por favor, sube un banner publicitario.");
@@ -239,7 +247,7 @@ export default function AdminPromociones() {
           d.append('imagen', imagenArchivo);
           
           try {
-            const r = await fetch('http://localhost:5000/api/promociones', { method: 'POST', body: d });
+            const r = await fetch(`${API_BASE_URL}/promociones`, { method: 'POST', body: d });
             if (r.ok) { 
               alert("¡Nueva promoción publicada exitosamente!"); 
               setFormData({ titulo: '', destino: '', resumen: '', itinerario: '', incluye: '', no_incluye: '', actividades: '', terminos: '', precio: '', es_recomendado: false }); 
@@ -247,6 +255,9 @@ export default function AdminPromociones() {
               setVistaPrevia(null); 
               setSubVista('ver'); 
               obtenerPromociones(); 
+            } else {
+              const err = await r.json();
+              alert("Error al guardar: " + (err.error || r.statusText));
             }
           } catch (error) {
             console.error("Error al publicar promoción:", error);
@@ -275,11 +286,10 @@ export default function AdminPromociones() {
             <input type="number" step="0.01" className="form-control border-2 fw-bold text-success" placeholder="0.00" value={formData.precio} onChange={(e) => setFormData({...formData, precio: e.target.value})} required />
           </div>
 
-          {/* CHECKBOX PARA MÁS RECOMENDADO / DESTACADO */}
           <div className="col-12">
             <div className="p-3 border border-warning rounded-3 bg-light d-flex align-items-center justify-content-between">
               <div>
-                <h6 className="m-0 fw-bold text-dark"><i className="bi bi-star-fill text-warning me-2"></i>¿Marcar como Mas Recomendado / Destacado?</h6>
+                <h6 className="m-0 fw-bold text-dark"><i className="bi bi-star-fill text-warning me-2"></i>¿Marcar como Más Recomendado / Destacado?</h6>
                 <small className="text-muted">Aparecerá fijado en la sección principal de Recomendados de la web.</small>
               </div>
               <div className="form-check form-switch fs-4">
@@ -390,7 +400,6 @@ export default function AdminPromociones() {
                   <input type="number" step="0.01" className="form-control text-success fw-bold" value={editFormData.precio} onChange={(e) => setEditFormData({...editFormData, precio: e.target.value})} required />
                 </div>
 
-                {/* OPCIÓN DESTACADO EN EL MODAL DE EDICIÓN */}
                 <div className="col-12">
                   <div className="p-2 px-3 border border-warning rounded bg-light d-flex align-items-center justify-content-between">
                     <span className="fw-bold small text-dark"><i className="bi bi-star-fill text-warning me-2"></i>¿Destacar como Más Recomendado?</span>

@@ -10,6 +10,22 @@ exports.obtenerNoticias = async (req, res, next) => {
   }
 };
 
+// 🆕 Obtener una noticia por ID (¡AGREGADA!)
+exports.obtenerNoticiaPorId = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const [results] = await pool.query("SELECT * FROM noticias WHERE id = ?", [id]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Noticia no encontrada." });
+    }
+
+    return res.json(results[0]);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Crear nueva noticia
 exports.crearNoticia = async (req, res, next) => {
   const { titulo, categoria, contenido } = req.body;

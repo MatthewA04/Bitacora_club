@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { API_BASE_URL } from "../services/api";
 
 export default function PromocionesSimple() {
   const { id } = useParams();
   const [paquete, setPaquete] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Servidor base derivado de tu API_BASE_URL
+  const SERVER_BASE_URL = API_BASE_URL.replace('/api', '');
+
   useEffect(() => {
-    fetch(`http://localhost:5000/api/promociones/${id}`)
-      .then(res => res.json())
-      .then(data => { setPaquete(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    fetch(`${API_BASE_URL}/promociones/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Error al obtener la promoción");
+        return res.json();
+      })
+      .then(data => {
+        setPaquete(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+        setPaquete(null);
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) {
@@ -43,7 +57,7 @@ export default function PromocionesSimple() {
   const whatsappUrl = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(mensajePredeterminado)}`;
 
   return (
-    <div  className="min-vh-100 pb-5 fondo-claro">
+    <div className="min-vh-100 pb-5 fondo-claro">
       <div className="container pt-4">
         
         {/* Botón de regreso minimalista */}
@@ -61,10 +75,16 @@ export default function PromocionesSimple() {
             {/* Imagen Principal con Badge Flotante */}
             <div className="position-relative overflow-hidden rounded-4 shadow-sm mb-4" style={{ maxHeight: '460px' }}>
               <img 
-                src={`http://localhost:5000${paquete.imagen}`} 
+                src={
+                  paquete.imagen
+                    ? paquete.imagen.startsWith('http')
+                      ? paquete.imagen
+                      : `${SERVER_BASE_URL}${paquete.imagen}`
+                    : 'https://via.placeholder.com/800x500?text=Bitacora+Club'
+                } 
                 className="w-100 h-100 object-fit-cover" 
                 style={{ objectFit: 'cover', minHeight: '320px' }} 
-                alt={paquete.titulo} 
+                alt={paquete.titulo || "Promoción"} 
               />
               <span className="position-absolute top-0 start-0 m-3 badge bg-white text-dark fw-bold rounded-pill px-3 py-2 shadow-sm text-uppercase" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                 📍 {paquete.destino || 'Nacional'}
@@ -147,7 +167,7 @@ export default function PromocionesSimple() {
                 <div className="d-flex align-items-baseline gap-1">
                   <span className="fs-3 fw-bold text-dark">S/</span>
                   <span className="display-6 fw-bold text-dark">
-                    {parseFloat(paquete.precio).toFixed(2)}
+                    {parseFloat(paquete.precio || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
