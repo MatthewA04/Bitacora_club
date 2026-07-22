@@ -1,0 +1,97 @@
+.logo-header {
+    width: 200px;
+    height: auto;
+}
+img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.animacion-scale:hover{
+    transform: scale(1.1);
+}
+.animacion-scale:hover {
+  transition: transform 0.3s ease-in-out;
+}
+
+.tarjeta-paquete{
+    border-radius: 20px;
+    border: 2px solid #fca922;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+}
+
+.imagen-tarjeta-paquete{
+    height: 180px;
+    object-fit: cover;
+    border-radius: 15px 15px 0px 0px;
+}
+.titulo-tarjeta-paquete{
+    color:#1a1a1a;
+    font-size: 20px;
+    font-weight: 500;
+    height: 48px;
+    overflow: hidden; 
+}
+
+.tarjeta-paquete:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.imagen-tarjeta-paquete {
+  height: 220px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.tarjeta-paquete:hover .imagen-tarjeta-paquete {
+  transform: scale(1.05);
+}
+
+.textos-2 {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgb(33 37 41 / 75%)
+}
+
+.boton-paquetes{
+    background-color: #fca922;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 25px 10px 25px;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+#contacto{
+    background: #FAF3EB;
+}
+
+.texto-form{
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.input-form{
+    background: #FCD89C !important;
+    border-radius: 12px !important;
+    color: #333 !important;
+}
+
+
+.imagenes-tarjeta{
+    height: 200px;
+    object-fit: cover; 
+}
+
+
+.footer{
+    margin-top:-3rem !important
+}
